@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>ApiMomo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <div class="main-container">
+      <!-- 左侧面板 -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <!-- 顶部一行：应用图标+名称（左上角）+ 操作图标 -->
+          <div class="sidebar-top">
+            <div class="sidebar-brand">
+              <svg class="brand-logo" viewBox="0 0 512 512" width="22" height="22" aria-hidden="true">
+                <defs>
+                  <linearGradient id="brand-logo-bg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#FFE3C2"/>
+                    <stop offset="100%" stop-color="#FFB673"/>
+                  </linearGradient>
+                </defs>
+                <circle cx="256" cy="256" r="254" fill="url(#brand-logo-bg)"/>
+                <path d="M 120 412 L 120 88 L 256 300 L 392 88 L 392 412" fill="none" stroke="#FFFFFF" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="brand-name">ApiMomo</span>
+            </div>
+            <div class="sidebar-actions">
+              <button id="btn-new-request" class="btn-icon-sm" data-i18n-title="sidebar.newRequest" title="New Request">
+                <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 3.2v9.6M3.2 8h9.6"/></svg>
+              </button>
+              <button id="btn-import" class="btn-icon-sm" data-i18n-title="sidebar.import" title="Import">
+                <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v7"/><path d="M5.2 6.8L8 9.6l2.8-2.8"/><path d="M2.8 13h10.4"/></svg>
+              </button>
+              <button id="btn-settings" class="btn-icon-sm" data-i18n-title="sidebar.settings" title="Settings">
+                <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4.5h6.5M12 4.5h2M2 11.5h2M7.5 11.5H14"/><circle cx="10.2" cy="4.5" r="1.6"/><circle cx="5.8" cy="11.5" r="1.6"/></svg>
+              </button>
+              <button id="btn-theme" class="btn-icon-sm" data-i18n-title="sidebar.toggleTheme" title="Toggle Theme">
+                <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8a5.6 5.6 0 1 0 6.8 6.8z"/></svg>
+              </button>
+            </div>
+          </div>
+          <nav class="sidebar-nav">
+            <button class="nav-btn active" data-view="history" data-i18n="sidebar.history">History</button>
+            <button class="nav-btn" data-view="collections" data-i18n="sidebar.collections">Collections</button>
+          </nav>
+          <input type="text" class="search-input" spellcheck="false" data-i18n-placeholder="sidebar.search" placeholder="Search APIs..." id="search-input">
+        </div>
+        <div class="sidebar-content" id="sidebar-content">
+          <!-- 动态生成 API 列表 -->
+        </div>
+        <div class="sidebar-footer">
+          <button id="btn-new-collection" class="btn-ghost" data-i18n="sidebar.newCollection">+ Create a Collection</button>
+        </div>
+      </aside>
+      <div class="resizer" id="resizer-sidebar"></div>
+
+      <!-- 右侧工作区 -->
+      <main class="workspace">
+        <!-- 请求标签栏：Postman 风格，支持选中/关闭/新建；地址栏属于标签页内容区 -->
+        <div class="req-tabs-bar">
+          <div class="req-tabs-scroll">
+            <div class="req-tabs" id="req-tabs"></div>
+          </div>
+          <!-- 新建按钮固定在滚动区右侧，标签过多时不随滚动隐藏 -->
+          <button class="req-tab-add" id="req-tab-add" data-i18n-title="tabs.newRequest" title="New Request">+</button>
+          <!-- 标签栏空白处：窗口拖动区（滚动区域本身不能作为拖动区，否则滚动条拖不动） -->
+          <div class="req-tabs-drag"></div>
+          <!-- 自绘窗口按钮（无边框窗口） -->
+          <div class="window-controls">
+            <button class="win-btn" id="win-minimize" title="Minimize" aria-label="Minimize">
+              <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><path d="M2.5 6h7"/></svg>
+            </button>
+            <button class="win-btn" id="win-maximize" title="Maximize" aria-label="Maximize">
+              <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" aria-hidden="true"><rect x="2.6" y="2.6" width="6.8" height="6.8" rx="1"/></svg>
+            </button>
+            <button class="win-btn win-close" id="win-close" title="Close" aria-label="Close">
+              <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><path d="M2.8 2.8l6.4 6.4M9.2 2.8l-6.4 6.4"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 请求 URL 栏 -->
+        <div class="url-bar">
+          <div class="method-select-wrapper" id="method-select-wrapper">
+            <select class="method-select" id="method-select">
+              <option value="GET" style="color: #4caf50; font-weight: bold;">GET</option>
+              <option value="POST" selected style="color: #ff9800; font-weight: bold;">POST</option>
+              <option value="PUT" style="color: #2196f3; font-weight: bold;">PUT</option>
+              <option value="PATCH" style="color: #9c27b0; font-weight: bold;">PATCH</option>
+              <option value="DELETE" style="color: #f44336; font-weight: bold;">DELETE</option>
+              <option value="HEAD" style="color: #00bcd4; font-weight: bold;">HEAD</option>
+              <option value="OPTIONS" style="color: #795548; font-weight: bold;">OPTIONS</option>
+            </select>
+          </div>
+          <div class="url-input-wrapper">
+            <input type="text" class="url-input" id="url-input" spellcheck="false" data-i18n-placeholder="url.placeholder" placeholder="Enter request URL">
+            <!-- 未保存标记：表单有变更时显示 -->
+            <span class="dirty-star" id="dirty-star" data-i18n-title="tabs.unsavedTitle" title="Unsaved changes" hidden>*</span>
+            <!-- 代理状态：内嵌输入框最右侧，无代理/使用代理两种图标，悬停显示当前代理，点击弹出选择菜单 -->
+            <button class="btn-proxy-toggle" id="btn-proxy-toggle" title="noproxy">
+              <svg class="proxy-icon-off" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <ellipse cx="12" cy="12" rx="4" ry="9"></ellipse>
+                <path d="M3.6 9h16.8M3.6 15h16.8"></path>
+              </svg>
+              <svg class="proxy-icon-on" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="4.5" cy="12" r="2"></circle>
+                <circle cx="12" cy="6.5" r="2"></circle>
+                <circle cx="12" cy="17.5" r="2"></circle>
+                <circle cx="19.5" cy="12" r="2"></circle>
+                <path d="M6.3 10.9l3.9-3.2M6.3 13.1l3.9 3.2M13.8 8l3.9 3.1M13.8 16l3.9-3.1"></path>
+              </svg>
+            </button>
+          </div>
+          <button class="btn-send" id="btn-send">
+            <span class="btn-send-label" data-i18n="url.send">Send</span>
+            <span class="btn-send-sending" data-i18n="res.sending">Sending...</span>
+            <span class="btn-send-cancel" data-i18n="url.cancel">Cancel</span>
+          </button>
+          <button class="btn-copy-curl" id="btn-copy-curl" data-i18n-title="url.curl" title="Copy as cURL">cURL</button>
+          <button class="btn-save" id="btn-save-request" data-i18n="url.save">Save</button>
+        </div>
+
+        <!-- 请求/响应区域 -->
+        <div class="request-response">
+          <!-- 请求区 -->
+          <div class="request-panel" id="request-panel">
+            <div class="panel-tabs">
+              <button class="tab-btn active" data-tab="params" data-i18n="req.params">Params</button>
+              <button class="tab-btn" data-tab="headers" data-i18n="req.headers">Headers</button>
+              <button class="tab-btn" data-tab="body" data-i18n="req.body">Body</button>
+              <!-- 查看当前请求实际发送的 HTTP 原始报文（三个页签通用） -->
+              <button class="btn-raw-request" id="btn-raw-request" data-i18n-title="raw.tooltip" title="View raw HTTP request"><span>i</span></button>
+            </div>
+            <div class="tab-content active" id="tab-params">
+              <!-- 添加按钮固定在页签下方第一行，表格行多时无需滚动到底部 -->
+              <button class="btn-add-row" data-target="params" data-i18n="req.addParam">+ Add Param</button>
+              <div class="kv-table" id="params-table">
+                <div class="kv-row kv-header">
+                  <span></span>
+                  <span data-i18n="req.key">Key</span>
+                  <span data-i18n="req.value">Value</span>
+                  <span data-i18n="req.description">Description</span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+            <div class="tab-content" id="tab-headers">
+              <button class="btn-add-row" data-target="headers" data-i18n="req.addHeader">+ Add Header</button>
+              <div class="kv-table" id="headers-table">
+                <div class="kv-row kv-header">
+                  <span></span>
+                  <span data-i18n="req.key">Key</span>
+                  <span data-i18n="req.value">Value</span>
+                  <span data-i18n="req.description">Description</span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+            <div class="tab-content" id="tab-body">
+              <div class="body-toolbar">
+                <select id="body-type">
+                  <option value="none">none</option>
+                  <option value="json" selected>JSON</option>
+                  <option value="text">text</option>
+                  <option value="form">x-www-form-urlencoded</option>
+                  <option value="multipart">multipart/form-data</option>
+                </select>
+                <button id="btn-beautify" data-i18n="req.beautify">Beautify</button>
+              </div>
+              <div class="body-editor-wrapper" id="body-editor-wrapper">
+                <pre class="body-highlight" id="body-highlight" aria-hidden="true"><code></code></pre>
+                <textarea class="body-editor" id="body-editor" spellcheck="false" data-i18n-placeholder="req.bodyPlaceholder" placeholder="Request body..."></textarea>
+              </div>
+              <!-- x-www-form-urlencoded 字段表（bodyType=form 时显示，勾选控制是否发送） -->
+              <div class="multipart-wrap" id="form-wrap" hidden>
+                <div class="kv-table" id="form-table">
+                  <div class="kv-row kv-header">
+                    <span></span>
+                    <span data-i18n="req.key">Key</span>
+                    <span data-i18n="req.value">Value</span>
+                    <span data-i18n="req.description">Description</span>
+                    <span></span>
+                  </div>
+                </div>
+                <button class="btn-add-row" id="btn-add-form" data-target="form" data-i18n="multipart.addField">+ Add Field</button>
+              </div>
+              <!-- multipart/form-data 字段表（bodyType=multipart 时显示） -->
+              <div class="multipart-wrap" id="multipart-wrap" hidden>
+                <div class="multipart-table" id="multipart-table">
+                  <div class="multipart-row multipart-head">
+                    <span></span>
+                    <span data-i18n="req.key">Key</span>
+                    <span>Type</span>
+                    <span data-i18n="req.value">Value</span>
+                    <span></span>
+                  </div>
+                </div>
+                <button class="btn-add-row" id="btn-add-multipart" data-i18n="multipart.addField">+ Add Field</button>
+              </div>
+            </div>
+          </div>
+          <div class="resizer" id="resizer-panels"></div>
+
+          <!-- 响应区 -->
+          <div class="response-panel">
+            <div class="response-toolbar">
+              <span class="response-status" id="response-status">---</span>
+              <span class="response-time" id="response-time"></span>
+              <span class="response-size" id="response-size"></span>
+              <div class="response-tabs">
+                <button class="resp-tab-btn active" data-resp-tab="pretty" data-i18n="res.pretty">Pretty</button>
+                <button class="resp-tab-btn" data-resp-tab="raw" data-i18n="res.raw">Raw</button>
+                <button class="resp-tab-btn" data-resp-tab="preview" data-i18n="res.preview">Preview</button>
+                <button class="resp-tab-btn" data-resp-tab="headers" data-i18n="res.headers">Headers</button>
+              </div>
+            </div>
+            <div class="response-content">
+              <button class="btn-copy-response" id="btn-copy-response" data-i18n="res.copy" data-i18n-title="res.copyResponse" title="Copy Response">Copy</button>
+              <div class="response-body" id="response-body">
+                <div class="response-empty">
+                  <svg class="response-empty-icon" viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="6" y="9" width="36" height="30" rx="4"/>
+                    <path d="M6 17h36"/>
+                    <path d="M14 25h12M14 31h18"/>
+                  </svg>
+                  <p class="response-empty-title" data-i18n="res.emptyTitle">No response yet</p>
+                  <p class="response-empty-hint" data-i18n="res.clickSend">Click Send to get a response</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 新建集合弹窗 -->
+  <div class="modal" id="modal-collection">
+    <div class="modal-content">
+      <h3 id="collection-modal-title" data-i18n="modal.createCollection">Create Collection</h3>
+      <input type="hidden" id="collection-edit-id">
+      <input type="text" id="collection-name" data-i18n-placeholder="modal.collectionName" placeholder="Collection name">
+      <input type="text" id="collection-tags" data-i18n-placeholder="modal.collectionTags" placeholder="Tags (comma separated)">
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-collection" data-i18n="modal.cancel">Cancel</button>
+        <button class="btn-primary" id="btn-create-collection" data-i18n="modal.create">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 重命名请求弹窗 -->
+  <div class="modal" id="modal-rename">
+    <div class="modal-content" style="max-width: 380px;">
+      <h3 data-i18n="modal.renameRequest">Rename Request</h3>
+      <p class="rename-url" id="rename-url-display"></p>
+      <input type="text" id="rename-input" data-i18n-placeholder="modal.requestName" placeholder="Request name">
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-rename" data-i18n="modal.cancel">Cancel</button>
+        <button class="btn-primary" id="btn-confirm-rename" data-i18n="modal.save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 保存请求弹窗 -->
+  <div class="modal" id="modal-save-request">
+    <div class="modal-content" style="max-width: 380px;">
+      <h3 data-i18n="modal.saveRequest">Save Request</h3>
+      <input type="text" id="save-req-name" data-i18n-placeholder="modal.requestName" placeholder="Request name">
+      <select id="save-req-collection"></select>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-save-req" data-i18n="modal.cancel">Cancel</button>
+        <button class="btn-primary" id="btn-confirm-save-req" data-i18n="modal.save">Save</button>
+      </div>
+      <div class="save-success" id="save-req-success"></div>
+    </div>
+  </div>
+
+  <!-- 标签管理弹窗 -->
+  <div class="modal" id="modal-tags">
+    <div class="modal-content" style="max-width: 380px;">
+      <h3 data-i18n="modal.manageTags">Manage Tags</h3>
+      <div class="tag-list" id="tag-list"></div>
+      <div class="tag-new-row">
+        <input type="text" id="new-tag-name" data-i18n-placeholder="modal.newTagName" placeholder="New tag name">
+        <button id="btn-add-tag" class="btn-secondary" data-i18n="modal.add">Add</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-tags" data-i18n="modal.cancel">Cancel</button>
+        <button class="btn-primary" id="btn-save-tags" data-i18n="modal.save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 移动 API 弹窗 -->
+  <div class="modal" id="modal-move">
+    <div class="modal-content">
+      <h3 id="move-modal-title" data-i18n="modal.moveToCollection">Move to Collection</h3>
+      <select id="move-target-collection"></select>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-move" data-i18n="modal.cancel">Cancel</button>
+        <button class="btn-primary" id="btn-confirm-move" data-i18n="modal.move">Move</button>
+      </div>
+      <div class="save-success" id="save-success-msg"></div>
+    </div>
+  </div>
+
+  <!-- 设置弹窗 -->
+  <div class="modal" id="modal-settings">
+    <div class="modal-content settings-content">
+      <h3 data-i18n="modal.settings">Settings</h3>
+      <div class="settings-body">
+        <div class="settings-section">
+          <h4 data-i18n="settings.proxy">Proxy</h4>
+          <label class="setting-label">
+            <input type="checkbox" id="proxy-enabled"> <span data-i18n="settings.enableProxy">Enable Proxy</span>
+          </label>
+          <div class="proxy-dropdown" id="proxy-dropdown">
+            <div class="proxy-dropdown-header" id="proxy-dropdown-header">
+              <span class="proxy-dropdown-label" id="proxy-dropdown-label">--</span>
+              <span class="proxy-dropdown-arrow">&#9662;</span>
+            </div>
+            <div class="proxy-dropdown-body" id="proxy-dropdown-body">
+              <div class="proxy-dropdown-list" id="proxy-dropdown-list"></div>
+              <div class="proxy-dropdown-add">
+                <input type="text" id="proxy-name-input" spellcheck="false" autocomplete="off" data-i18n-placeholder="settings.proxyNamePlaceholder" placeholder="Name">
+                <input type="text" id="proxy-url-input" spellcheck="false" autocomplete="off" data-i18n-placeholder="settings.proxyUrlPlaceholder" placeholder="proxy.example.com:8080">
+                <button class="btn-icon btn-add-proxy" id="btn-add-proxy" title="Add" data-i18n-title="settings.addProxy">+</button>
+              </div>
+            </div>
+          </div>
+          <p class="setting-hint" data-i18n="settings.proxyFormat">Format: host:port or http://host:port</p>
+          <label class="setting-label" style="margin-top:6px">NO_PROXY</label>
+          <input type="text" id="proxy-no-proxy" placeholder="localhost,127.0.0.1,*.local,*.internal.com">
+          <p class="setting-hint" data-i18n="settings.noProxyHint">Comma-separated host patterns, supports * wildcard (e.g. *.local)</p>
+        </div>
+        <div class="settings-grid">
+          <div class="settings-section">
+            <h4 data-i18n="settings.ssl">SSL</h4>
+            <label class="setting-label">
+              <input type="checkbox" id="ignore-ssl"> <span data-i18n="settings.ignoreSsl">Ignore SSL Certificate Verification</span>
+            </label>
+            <p class="setting-hint" data-i18n="settings.sslHint">Skip HTTPS certificate verification (for self-signed cert dev environments)</p>
+          </div>
+          <div class="settings-section">
+            <h4 data-i18n="settings.language">Language</h4>
+            <select id="language-select">
+              <option value="en">English</option>
+              <option value="zh">中文（简体）</option>
+              <option value="zh-TW">中文（繁體）</option>
+              <option value="ja">日本語</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-grid">
+          <div class="settings-section">
+            <h4 data-i18n="settings.requestDefaults">Request Defaults</h4>
+            <label class="setting-label"><span data-i18n="settings.defaultTimeout">Default Timeout (ms)</span></label>
+            <input type="number" id="timeout-value" value="30000" min="1000" step="1000">
+          </div>
+          <div class="settings-section settings-about">
+            <h4 data-i18n="settings.about">About</h4>
+            <div class="version-info"><span data-i18n="settings.version">Version</span>: <span id="app-version">-</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-settings" data-i18n="modal.cancel">Cancel</button>
+        <button class="btn-primary" id="btn-save-settings" data-i18n="modal.save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Postman 导入确认弹窗 -->
+  <div class="modal" id="modal-postman-import">
+    <div class="modal-content" style="max-width: 380px;">
+      <h3 data-i18n="modal.importPostman">Import from Postman</h3>
+      <p class="setting-hint" id="postman-import-hint"></p>
+      <input type="text" id="postman-collection-name" spellcheck="false" data-i18n-placeholder="modal.collectionName" placeholder="Collection name">
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-postman-import" data-i18n="modal.cancel">Cancel</button>
+        <button class="btn-primary" id="btn-confirm-postman-import" data-i18n="modal.import">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 导入 cURL 弹窗 -->
+  <div class="modal" id="modal-import">
+    <div class="modal-content import-content">
+      <h3 data-i18n="modal.importCurl">Import cURL</h3>
+      <textarea id="curl-input" data-i18n-placeholder="modal.curlPlaceholder" placeholder="Paste curl command here..."></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-import" data-i18n="modal.cancel">Cancel</button>
+        <button class="btn-primary" id="btn-parse-curl" data-i18n="modal.parseImport">Parse &amp; Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关闭标签确认弹窗：未保存时提示 -->
+  <div class="modal" id="modal-close-tab">
+    <div class="modal-content" style="max-width: 380px;">
+      <h3 data-i18n="tabs.unsavedTitle">Unsaved Changes</h3>
+      <p class="setting-hint" data-i18n="tabs.unsavedMessage">This request has unsaved changes. Save before closing?</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-closetab-cancel" data-i18n="modal.cancel">Cancel</button>
+        <button class="btn-secondary" id="btn-closetab-discard" data-i18n="tabs.discard">Don't Save</button>
+        <button class="btn-primary" id="btn-closetab-save" data-i18n="modal.save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HTTP 原始请求报文弹窗 -->
+  <div class="modal" id="modal-raw-request">
+    <div class="modal-content raw-request-content">
+      <h3 data-i18n="raw.title">Raw HTTP Request</h3>
+      <pre class="raw-request-view" id="raw-request-view"></pre>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btn-cancel-raw-request" data-i18n="modal.cancel">Cancel</button>
+        <button class="btn-primary" id="btn-copy-raw-request" data-i18n="res.copy">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="renderer.js"></script>
+</body>
+</html>
